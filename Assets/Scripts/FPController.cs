@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using TMPro;
 
 public class FPController : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class FPController : MonoBehaviour
     //public ParticleSystem impactPS;
     public int particleCount = 20;
     public float gravity = 9.81f;
-
+    public GameObject UI;
 
 
     private Camera cam;
@@ -31,42 +32,53 @@ public class FPController : MonoBehaviour
         cam = Camera.main;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;  
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        Movement();
-        MouseLook();
-        Sprinting();
-        Jumping();
-
-        if (heldItem != null)
+        if (Input.GetKeyDown(KeyCode.W))
         {
-            if (Input.GetMouseButtonDown(1))
-            {
-                heldItem.Throw(throwForce, cam.transform.forward);
-                heldItem = null;
-            }
+           GameManager.Instance.gameStarted = true;
+           UI.SetActive(false);
+
         }
-        if (ObjectInFocus() != null)
-        {
-            float distanceToObject = Vector3.Distance(cam.transform.position, ObjectInFocus().transform.position);
 
-            if (Input.GetMouseButtonDown(0))
-            {
-                //impactPS.transform.position = hitPoint;
-                //impactPS.Emit(particleCount);
-            }
-            if (distanceToObject <= pickUpRange && ObjectInFocus().GetComponent<Item>() != null)
+        if (GameManager.Instance.gameStarted)
+        {
+            Movement();
+            MouseLook();
+            Sprinting();
+            Jumping();
+
+            if (heldItem != null)
             {
                 if (Input.GetMouseButtonDown(1))
                 {
-                    heldItem = ObjectInFocus().GetComponent<Item>();
-                    heldItem.PickUp(cam.transform, holdPoint.position);
+                    heldItem.Throw(throwForce, cam.transform.forward);
+                    heldItem = null;
                 }
             }
-        }
+            if (ObjectInFocus() != null)
+            {
+                float distanceToObject = Vector3.Distance(cam.transform.position, ObjectInFocus().transform.position);
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    //impactPS.transform.position = hitPoint;
+                    //impactPS.Emit(particleCount);
+                }
+                if (distanceToObject <= pickUpRange && ObjectInFocus().GetComponent<Item>() != null)
+                {
+                    if (Input.GetMouseButtonDown(1))
+                    {
+                        heldItem = ObjectInFocus().GetComponent<Item>();
+                        heldItem.PickUp(cam.transform, holdPoint.position);
+                    }
+                }
+            }
+        } 
         
     }
 
@@ -137,5 +149,11 @@ public class FPController : MonoBehaviour
 
         return result;
     }
-
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.gameObject.CompareTag("Enemy"))
+        {
+            GameManager.Instance.GameOver();
+        }
+    }
 }

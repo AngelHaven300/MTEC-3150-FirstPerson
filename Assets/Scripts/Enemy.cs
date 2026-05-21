@@ -25,35 +25,37 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        targetWayPoint = waypoints[wayPointIndex];
-        directionToPlayer = (player.position - transform.position).normalized;
-        Quaternion rot = Quaternion.LookRotation(directionToPlayer);
-        if (patrolling)
+        if (GameManager.Instance.crawlersStarted)
         {
-            EnemyPatrolling();
-
-        }
-        if (PlayerDetected())
-        {
-            playerFound = true;
-            patrolling = false;
-            agent.SetDestination(player.position);
-        }
-        if (playerFound && !PlayerDetected())
-        {
-            if (timeSinceAlerted < alertDuration)
+            targetWayPoint = waypoints[wayPointIndex];
+            directionToPlayer = (player.position - transform.position).normalized;
+            Quaternion rot = Quaternion.LookRotation(directionToPlayer);
+            if (patrolling)
             {
+                EnemyPatrolling();
+
+            }
+            if (PlayerDetected())
+            {
+                playerFound = true;
+                patrolling = false;
                 agent.SetDestination(player.position);
-                timeSinceAlerted += Time.deltaTime;
             }
-            else
+            if (playerFound && !PlayerDetected())
             {
-                playerFound = false;
-                timeSinceAlerted = 0;
-                patrolling = true;
+                if (timeSinceAlerted < alertDuration)
+                {
+                    agent.SetDestination(player.position);
+                    timeSinceAlerted += Time.deltaTime;
+                }
+                else
+                {
+                    playerFound = false;
+                    timeSinceAlerted = 0;
+                    patrolling = true;
+                }
             }
         }
-
 
     }
 
@@ -92,4 +94,5 @@ public class Enemy : MonoBehaviour
         }
         return result;
     }
+    
 }
