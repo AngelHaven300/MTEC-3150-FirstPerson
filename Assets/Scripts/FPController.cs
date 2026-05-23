@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using TMPro;
+using UnityEngine.UI;
+using System.Runtime.Serialization;
 
 public class FPController : MonoBehaviour
 {
@@ -19,8 +21,15 @@ public class FPController : MonoBehaviour
     //public ParticleSystem impactPS;
     public int particleCount = 20;
     public float gravity = 9.81f;
-    public GameObject UI;
+    public GameObject TitleScreenUI;
+    public GameObject StaminaUI;
 
+    public bool playerCanSprint = true;
+    public float stamina = 100f;
+    public float maxStamina = 100f;
+    public float staminaDrainRate = 30f;
+    public float staminaRegenRate = 10f;
+    public Slider staminaSlider;
 
     private Camera cam;
     private Vector3 hitPoint;
@@ -33,15 +42,21 @@ public class FPController : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;  
         
+        if (staminaSlider != null)
+        {
+            staminaSlider.maxValue = maxStamina;
+            staminaSlider.value = stamina;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.S))
         {
            GameManager.Instance.gameStarted = true;
-           UI.SetActive(false);
+           TitleScreenUI.SetActive(false);
+           StaminaUI.SetActive(true);
 
         }
 
@@ -84,14 +99,35 @@ public class FPController : MonoBehaviour
 
     void Sprinting()
     {
-        if (Input.GetKey(KeyCode.LeftShift))
+        bool isMoving = Mathf.Abs(Input.GetAxis("Horizontal")) > 0.1f || Mathf.Abs(Input.GetAxis("Vertical")) > 0.1f;
+        if (Input.GetKey(KeyCode.LeftShift) && playerCanSprint && stamina > 0 && isMoving)
         {
             currentSpeed = sprintSpeed;
-
+            stamina -= staminaDrainRate * Time.deltaTime;
+            if (stamina <= 0)
+            {
+                stamina = 0;
+                playerCanSprint = false;
+            }
         }
         else
         {
             currentSpeed = walkSpeed;
+
+            if (stamina < maxStamina)
+            {
+                stamina += staminaRegenRate * Time.deltaTime;
+
+                if (stamina >= 15f)
+                {
+                    playerCanSprint = true;
+                }
+            }
+        }
+        stamina = Mathf.Clamp(stamina, 0, maxStamina);
+        if (staminaSlider != null)
+        {
+            staminaSlider.value = stamina;
         }
     }
     void Jumping()
@@ -149,11 +185,5 @@ public class FPController : MonoBehaviour
 
         return result;
     }
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if (hit.gameObject.CompareTag("Enemy"))
-        {
-            GameManager.Instance.GameOver();
-        }
-    }
+   
 }
